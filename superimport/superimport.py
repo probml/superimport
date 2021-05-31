@@ -6,6 +6,7 @@ import pipreqs
 import inspect
 import re
 import logging
+import os
 
 # based on
 # https://stackoverflow.com/questions/44210656/how-to-check-if-a-module-is-installed-in-python-and-if-not-install-it-within-t
@@ -15,6 +16,7 @@ import logging
 
 
 def get_packages_from_txt(file, dim="="):
+
     packages_string = open(file).read()
     if dim:
         packages = {
@@ -100,7 +102,7 @@ mapper = pipreqs.__path__[0] + "/mapping"
 mapping = get_packages_from_txt(mapper, ":")
 stdlib_path = pipreqs.__path__[0] + "/stdlib"
 stdlib = get_packages_from_txt(stdlib_path, "")
-mapping2 = get_packages_from_txt("./mapping2", ":")
+mapping2 = get_packages_from_txt("./superimport/mapping2", ":")
 
 mapping = {**mapping, **mapping2}  # adding two dictionaries
 
