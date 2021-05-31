@@ -3,13 +3,13 @@ from distutils.core import setup
 setup(
     name="superimport",
     packages=["superimport"],
-    version="0.1a",
+    version="0.1c",
     license="MIT",
     description="Simple reverse lookup for the current python file missing packages",
     author="Mahmoud Soliman",
     author_email="mjs@aucegypt.edu",
     url="https://github.com/probml/superimport",
-    download_url="https://github.com/probml/superimport/archive/refs/tags/v_01b.tar.gz",
+    download_url="https://github.com/probml/superimport/archive/refs/tags/v_01c.tar.gz",
     keywords=["setup", "runtime", "automation"],
     install_requires=[
         "pipreqs",
