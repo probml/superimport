@@ -112,7 +112,6 @@ if __name__ != "__main__":
             fc = open(frame.filename).read()
             fc = fc.replace("import superimport\n", "")
             matches = get_imports(fc)
-            # print(matches)
             for package in matches:
                 try:
                     import_module(package, True)
