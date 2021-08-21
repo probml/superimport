@@ -1,3 +1,13 @@
+# If you add `import superimport` to the top of your script
+# then running it should automatically trigger installation of all required packages
+# Author: Mahmoud Soliman (mjs@aucegypt.edu)
+
+# Code is based on
+# https://stackoverflow.com/questions/44210656/how-to-check-if-a-module-is-installed-in-python-and-if-not-install-it-within-t
+# https://stackoverflow.com/questions/52311738/get-name-from-python-file-which-called-the-import
+# https://gist.github.com/gene1wood/9472a9d0dffce1a56d6e796afc6539b8
+# https://stackoverflow.com/questions/8718885/import-module-from-string-variable
+
 import sys
 import subprocess
 import pkg_resources
@@ -8,11 +18,6 @@ import re
 import logging
 import os
 
-# based on
-# https://stackoverflow.com/questions/44210656/how-to-check-if-a-module-is-installed-in-python-and-if-not-install-it-within-t
-# https://stackoverflow.com/questions/52311738/get-name-from-python-file-which-called-the-import
-# https://gist.github.com/gene1wood/9472a9d0dffce1a56d6e796afc6539b8
-# https://stackoverflow.com/questions/8718885/import-module-from-string-variable
 
 
 def get_packages_from_txt(file, dim="="):
@@ -50,6 +55,14 @@ def get_match_list(the_string, the_regex_pattern, guard="#"):
     matches_list = [m for m in matches_list if the_string[m.span()[0] - 1] != guard]
     return matches_list
 
+def preprocess_imports(name):
+    if name.find(".")!=-1:
+        name = name.split(".")[0]
+    if name.endswith(" "):
+        name = name[:-1]
+    if name.find(" as ")!=-1:
+        name = name.split(" as ")[0]
+    return name
 
 def get_imports(
     file_string=None, patterns=[r"^import (.+)$", r"^from ((?!\.+).*?) import (?:.*)$"]
@@ -65,9 +78,10 @@ def get_imports(
                     if the_string.startswith("from"):
                         i = the_string.find("import")
                         name = the_string[5:i]
-
+                        name = preprocess_imports(name)
                     else:
                         name = the_string.replace("import ", "")
+                        name = preprocess_imports(name)
                     matches.append(name)
     return set(matches)
 
@@ -102,7 +116,9 @@ mapper = pipreqs.__path__[0] + "/mapping"
 mapping = get_packages_from_txt(mapper, ":")
 stdlib_path = pipreqs.__path__[0] + "/stdlib"
 stdlib = get_packages_from_txt(stdlib_path, "")
-mapping2 = get_packages_from_txt("./superimport/mapping2", ":")
+dir_name = os.path.dirname(__file__)
+#mapping2 = get_packages_from_txt(f"{dir_name}/superimport/mapping2", ":")
+mapping2 = get_packages_from_txt(f"{dir_name}/superimport_mappings.txt", ":")
 
 mapping = {**mapping, **mapping2}  # adding two dictionaries
 
@@ -119,9 +135,14 @@ if __name__ != "__main__":
                     import_module(package, True)
                 except Exception as e:
                     if package in mapping:
-                        install_if_missing({gnippam[package]}, True)
+
+                        try:
+                            install_if_missing({mapping[package]}, True)
+                        except:
+                            print("Could not install automatically from map, trying reverse map")
+                            install_if_missing({gnippam[package]}, True)
                     else:
-                        logging.warning("Package was not found in the reverse index.")
+                        logging.warning("Package was not found in the reverse index, trying pypi.")
                         status, name, meta = check_if_package_on_pypi(package)
                         if status:
                             logging.info(
