@@ -1,6 +1,8 @@
 # If you add `import superimport` to the top of your script
 # then running it should automatically trigger installation of all required packages
+# you can also automatically install required packages using the args below
 # Author: Mahmoud Soliman (mjs@aucegypt.edu)
+
 
 # Code is based on
 # https://stackoverflow.com/questions/44210656/how-to-check-if-a-module-is-installed-in-python-and-if-not-install-it-within-t
@@ -10,7 +12,6 @@
 
 import sys
 import subprocess
-from typing import Optional
 import pkg_resources
 import requests
 import inspect
@@ -20,6 +21,7 @@ import os
 import argparse
 from glob import glob
 import importlib
+
 pipreqs_mapping_url="https://raw.githubusercontent.com/bndr/pipreqs/master/pipreqs/mapping"
 superimport_mappin_url="https://raw.githubusercontent.com/probml/superimport/main/superimport/mapping2"
 
@@ -31,6 +33,7 @@ def download_url(url, file_name):
                 if chunk:  # filter out keep-alive new chunks
                     f.write(chunk)
                     f.flush()
+
 def load_file_from_url(url):
      with requests.get(url) as r:
          return r.content.decode("utf-8") 
@@ -61,7 +64,7 @@ def install_if_missing(packages_names, verbose=False):
             subprocess.check_call([python3, "-m", "pip", "install", *missing])
         else:
             subprocess.check_call(
-                [python3, "-m", "pip3", "install", *missing], stdout=subprocess.DEVNULL
+                [python3, "-m", "pip", "install", *missing], stdout=subprocess.DEVNULL
             )
 
 
@@ -87,7 +90,6 @@ def preprocess_imports(name):
 
 def get_imports(
     file_string=None,file=None,
-    #patterns=[r"^import (.+)$", r"^from ((?!\.+).*?) import (?:.*)$"]
     patterns=[r"""from \.((?!\.+).*?) import (?:.*)|from ((?!\.+).*?) import (?:.*)|import (.+)"""]
                 ):
     matches = []
@@ -145,9 +147,41 @@ def get_imports_from_dir(the_dir):
     for f in python_files:
         with open(f) as fp:
             file_string = fp.read()
-            imports = get_imports(file_string,f)
+            imports = get_imports(file_string=file_string,file=f)
             for i in imports:
-                yield i    
+                yield i 
+
+# Depending if you run this script from a terminal or import it, the way to get the required packages is different.
+   
+def get_imports_depending_on_context():
+    if __name__ != "__main__":
+        frames=inspect.stack()[1:]
+        for frame in frames:
+            file_name=frame.filename.split("/")[-1]
+            if frame.filename[0] != "<" and file_name!="superimport.py":
+                fc = open(frame.filename).read()
+                fc = fc.replace("import superimport\n", "")
+                imports = get_imports(fc,frame.filename)
+                break
+    elif __name__ == "__main__":
+        parser=argparse.ArgumentParser()
+        parser.add_argument('-superimport_input_dir', help='input directory')
+        parser.add_argument('-superimport_input_file', help='optional input file')
+        args=parser.parse_args()
+
+        if not args.superimport_input_dir and not args.superimport_input_file:
+                sys.stderr.write("ERROR: superimport : missing input directory or file\n")
+        else:
+            if args.superimport_input_dir:
+                imports = get_imports_from_dir(args.superimport_input_dir)
+                
+            elif args.superimport_input_file:
+                fc = open(args.superimport_input_file).read()
+                imports = get_imports(fc,args.superimport_input_file)
+    return imports            
+
+
+
 
 ### Globals
 
@@ -162,49 +196,37 @@ dir_name = os.path.dirname(__file__)
 maping = {**mapping, **mapping2}  # adding two dictionaries
 
 gnippam = {v: k for k, v in mapping.items()}  # reversing the mapping
-
-if __name__ == "__main__":
-    parser=argparse.ArgumentParser()
-    parser.add_argument('-superimport_input_dir', help='input directory')
-    parser.add_argument('-superimport_input_file', help='optional input file')
-    args=parser.parse_args()
-
-    if not args.superimport_input_dir and not args.superimport_input_file:
-            sys.stderr.write("ERROR: superimport : missing input directory or file\n")
-    else:
-        if args.superimport_input_dir:
-            imports = get_imports_from_dir(args.superimport_input_dir)
-            # from https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-a-list-of-lists
-            #imports = {item for sublist in imports for item in sublist}
-            imports = set(imports)
-        elif args.superimport_input_file:
-            imports = get_imports(args.superimport_input_file)
+###
 
 
 
-    print(imports)
+    
+    
+    
+    
+imports = get_imports_depending_on_context()
+# Check if each package is already installed.
+for package,file_name in imports:
+    try:
+        import_module(file_name,package, True)
+    except Exception as e:
+        if package in mapping:
 
-    for package,file_name in imports:
-        try:
-            import_module(file_name,package, True)
-        except Exception as e:
-            if package in mapping:
-
-                try:
-                    install_if_missing({mapping[package]}, True)
-                except:
-                    print("Could not install automatically from map, trying reverse map")
-                    install_if_missing({gnippam[package]}, True)
+            try:
+                install_if_missing({mapping[package]}, True)
+            except Exception as e2:
+                logging.warning("Could not install automatically from map, trying reverse map")
+                install_if_missing({gnippam[package]}, True)
+        else:
+            logging.warning("Package was not found in the reverse index, trying pypi.")
+            status, name, meta = check_if_package_on_pypi(package)
+            if status:
+                logging.info(
+                    f"Package{name} was found on PyPi\nNow installing {name}"
+                )
+                install_if_missing({package}, True)
             else:
-                logging.warning("Package was not found in the reverse index, trying pypi.")
-                status, name, meta = check_if_package_on_pypi(package)
-                if status:
-                    logging.info(
-                        f"Package{name} was found on PyPi\nNow installing {name}"
-                    )
-                    install_if_missing({package}, True)
-                else:
-                    logging.warning(
-                        f"Failed to install {package} automatically"
-                    )
-                #break
+                logging.warning(
+                    f"Failed to install {package} automatically"
+                )
+    
