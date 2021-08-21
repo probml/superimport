@@ -10,12 +10,15 @@
 
 import sys
 import subprocess
+from typing import Optional
 import pkg_resources
 import requests
 import inspect
 import re
 import logging
 import os
+import argparse
+from glob import glob
 pipreqs_mapping_url="https://raw.githubusercontent.com/bndr/pipreqs/master/pipreqs/mapping"
 superimport_mappin_url="https://raw.githubusercontent.com/probml/superimport/main/superimport/mapping2"
 
@@ -32,6 +35,7 @@ def load_file_from_url(url):
          return r.content
 
 def get_packages_from_string(the_string, dim="="):
+    
     if dim:
         packages = {
             c.split(dim)[0]: c.split(dim)[1] for c in packages_string.split("\n") if c
@@ -125,6 +129,20 @@ def import_module(module_name, verbose=False):
         raise e
 
 
+def get_imports_from_dir(the_dir):
+    if not os.path.isdir(the_dir):
+                sys.stderr.write("ERROR: superimport : input directory does not exist\n")
+    else:
+        python_files = glob(os.path.join(the_dir, "*.py"))
+
+    for f in python_files:
+        with open(f) as fp:
+            file_string = fp.read()
+            imports = get_imports(file_string)
+            for i in imports:
+                yield i    
+
+### Globals
 
 
 pipreqs_mapping_string = load_file_from_url(pipreqs_mapping_url)
@@ -139,6 +157,24 @@ maping = {**mapping, **mapping2}  # adding two dictionaries
 gnippam = {v: k for k, v in mapping.items()}  # reversing the mapping
 
 if __name__ != "__main__":
+    parser=argparse.ArgumentParser()
+    parser.add_argument('-superimport_input_dir', help='input directory')
+    parser.add_argument('-superimport_input_file', help='optional input file')
+    args=parser.parse_args()
+
+    if not args.superimport_input_dir or not args.superimport_input_file:
+            sys.stderr.write("ERROR: superimport : missing input directory or file\n")
+    else:
+        if args.superimport_input_dir:
+            imports = get_imports_from_dir(args.superimport_input_dir)
+            # from https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-a-list-of-lists
+            imports = {item for sublist in imports for item in sublist}
+        elif args.superimport_input_file:
+            imports = get_imports(args.superimport_input_file)
+
+
+
+
     for frame in inspect.stack()[1:]:
         if frame.filename[0] != "<":
             fc = open(frame.filename).read()
