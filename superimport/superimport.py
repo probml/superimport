@@ -155,10 +155,13 @@ def get_imports_from_dir(the_dir):
    
 def get_imports_depending_on_context():
     if __name__ != "__main__":
+        #######
+        # TODO: copy superimport.py to the 
+        #######
         frames=inspect.stack()[1:]
         for frame in frames:
             file_name=frame.filename.split("/")[-1]
-            if frame.filename[0] != "<" and file_name!="superimport.py":
+            if frame.filename[0] != "<" and file_name!="superimport.py" and file_name!="__init__.py":
                 fc = open(frame.filename).read()
                 fc = fc.replace("import superimport\n", "")
                 imports = get_imports(fc,frame.filename)
