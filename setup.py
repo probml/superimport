@@ -1,11 +1,11 @@
 from distutils.core import setup
-from setuptools import setup, find_packages
+from setuptools import setup
 from superimport._version import __version__
 
 setup(
     name="superimport",
     packages=["superimport"],
-    version="0.1.1a",
+    version=__version__,
     license="MIT",
     description="Simple reverse lookup for the current python file missing packages",
     author="Mahmoud Soliman",
@@ -28,6 +28,5 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
     ],
-    include_package_data=True,
-    package_data={"": ["mapping2"]},
+    
 )
