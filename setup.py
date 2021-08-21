@@ -14,8 +14,7 @@ setup(
     download_url="https://github.com/probml/superimport/archive/refs/tags/v_011a.tar.gz",
     keywords=["setup", "runtime", "automation"],
     install_requires=[
-        "pipreqs",
-        "requests",
+        "requests"
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
