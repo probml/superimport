@@ -7,7 +7,7 @@ setup(
     packages=["superimport"],
     version=__version__,
     license="MIT",
-    description="Simple reverse lookup for the current python file missing packages",
+    description="Simple package to lookup missing packages and autoinstall them.",
     author="Mahmoud Soliman",
     author_email="mjs@aucegypt.edu",
     url="https://github.com/probml/superimport",
