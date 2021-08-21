@@ -12,17 +12,26 @@ import sys
 import subprocess
 import pkg_resources
 import requests
-import pipreqs
 import inspect
 import re
 import logging
 import os
+pipreqs_mapping_url="https://raw.githubusercontent.com/bndr/pipreqs/master/pipreqs/mapping"
+superimport_mappin_url="https://raw.githubusercontent.com/probml/superimport/main/superimport/mapping2"
 
+def download_url(url, file_name):
+    # NOTE the stream=True parameter
+    with requests.get(url, stream=True) as r:
+        with open(file_name, "wb") as f:
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk:  # filter out keep-alive new chunks
+                    f.write(chunk)
+                    f.flush()
+def load_file_from_url(url):
+     with requests.get(url) as r:
+         return r.content
 
-
-def get_packages_from_txt(file, dim="="):
-
-    packages_string = open(file).read()
+def get_packages_from_string(the_string, dim="="):
     if dim:
         packages = {
             c.split(dim)[0]: c.split(dim)[1] for c in packages_string.split("\n") if c
@@ -30,6 +39,11 @@ def get_packages_from_txt(file, dim="="):
     else:
         packages = {c: True for c in packages_string.split("\n") if c}
     return packages
+
+def get_packages_from_txt(file, dim="="):
+
+    packages_string = open(file).read()
+    return get_packages_from_string(packages_string, dim)
 
 
 def install_if_missing(packages_names, verbose=False):
@@ -42,7 +56,7 @@ def install_if_missing(packages_names, verbose=False):
             subprocess.check_call([python3, "-m", "pip", "install", *missing])
         else:
             subprocess.check_call(
-                [python3, "-m", "pip", "install", *missing], stdout=subprocess.DEVNULL
+                [python3, "-m", "pip3", "install", *missing], stdout=subprocess.DEVNULL
             )
 
 
@@ -65,8 +79,9 @@ def preprocess_imports(name):
     return name
 
 def get_imports(
-    file_string=None, patterns=[r"^import (.+)$", r"^from ((?!\.+).*?) import (?:.*)$"]
-):
+    file_string=None,
+    patterns=[r"^import (.+)$", r"^from ((?!\.+).*?) import (?:.*)$"]
+                ):
     matches = []
     for p in patterns:
         strings = file_string.split("\n")
@@ -110,17 +125,16 @@ def import_module(module_name, verbose=False):
         raise e
 
 
-mapper = pipreqs.__path__[0] + "/mapping"
 
 
-mapping = get_packages_from_txt(mapper, ":")
-stdlib_path = pipreqs.__path__[0] + "/stdlib"
-stdlib = get_packages_from_txt(stdlib_path, "")
+pipreqs_mapping_string = load_file_from_url(pipreqs_mapping_url)
+superimport_mapping_string = load_file_from_url(superimport_mappin_url)
+mapping = get_packages_from_string(pipreqs_mapping_string, ":")
+mapping2= get_packages_from_string(superimport_mapping_string, ":")
+
+
 dir_name = os.path.dirname(__file__)
-#mapping2 = get_packages_from_txt(f"{dir_name}/superimport/mapping2", ":")
-mapping2 = get_packages_from_txt(f"{dir_name}/superimport_mappings.txt", ":")
-
-mapping = {**mapping, **mapping2}  # adding two dictionaries
+maping = {**mapping, **mapping2}  # adding two dictionaries
 
 gnippam = {v: k for k, v in mapping.items()}  # reversing the mapping
 
