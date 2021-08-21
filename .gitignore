@@ -2,3 +2,4 @@ __pycache__/*
 .vscode/*
 superimport/__pycache__/*
 superimport.egg-info/*
+dist/*
