@@ -154,6 +154,7 @@ def get_imports_from_dir(the_dir):
 # Depending if you run this script from a terminal or import it, the way to get the required packages is different.
    
 def get_imports_depending_on_context():
+    imports=[]
     if __name__ != "__main__":
         #######
         # TODO: copy superimport.py to the 
@@ -209,6 +210,7 @@ gnippam = {v: k for k, v in mapping.items()}  # reversing the mapping
     
 imports = get_imports_depending_on_context()
 # Check if each package is already installed.
+
 for package,file_name in imports:
     try:
         import_module(file_name,package, True)
