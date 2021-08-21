@@ -4,4 +4,4 @@
 # __version__ = f"0.0.3.dev1.{build_time}"
 # print(__version__)
 
-__version__= "0.0.3.dev1.20210821214809"
+__version__= "0.3.0"
