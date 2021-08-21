@@ -19,6 +19,7 @@ import logging
 import os
 import argparse
 from glob import glob
+import importlib
 pipreqs_mapping_url="https://raw.githubusercontent.com/bndr/pipreqs/master/pipreqs/mapping"
 superimport_mappin_url="https://raw.githubusercontent.com/probml/superimport/main/superimport/mapping2"
 
@@ -32,9 +33,9 @@ def download_url(url, file_name):
                     f.flush()
 def load_file_from_url(url):
      with requests.get(url) as r:
-         return r.content
+         return r.content.decode("utf-8") 
 
-def get_packages_from_string(the_string, dim="="):
+def get_packages_from_string(packages_string, dim="="):
     
     if dim:
         packages = {
@@ -75,7 +76,9 @@ def get_match_list(the_string, the_regex_pattern, guard="#"):
 
 def preprocess_imports(name):
     if name.find(".")!=-1:
-        name = name.split(".")[0]
+        split = name.split(".")
+        if split[0]:
+            name = split[0]
     if name.endswith(" "):
         name = name[:-1]
     if name.find(" as ")!=-1:
@@ -83,15 +86,14 @@ def preprocess_imports(name):
     return name
 
 def get_imports(
-    file_string=None,
-    patterns=[r"^import (.+)$", r"^from ((?!\.+).*?) import (?:.*)$"]
+    file_string=None,file=None,
+    #patterns=[r"^import (.+)$", r"^from ((?!\.+).*?) import (?:.*)$"]
+    patterns=[r"""from \.((?!\.+).*?) import (?:.*)|from ((?!\.+).*?) import (?:.*)|import (.+)"""]
                 ):
     matches = []
     for p in patterns:
-        strings = file_string.split("\n")
-        for s in strings:
-            re_matches = get_match_list(s, p)
-            if re_matches:
+        re_matches = get_match_list(file_string, p)
+        if re_matches:
                 for m in re_matches:
                     the_string = m.group()
                     if the_string.startswith("from"):
@@ -101,7 +103,7 @@ def get_imports(
                     else:
                         name = the_string.replace("import ", "")
                         name = preprocess_imports(name)
-                    matches.append(name)
+                    matches.append((name,file))
     return set(matches)
 
 
@@ -114,11 +116,16 @@ def check_if_package_on_pypi(packages_name):
     else:
         return False, None, None
 
-
-def import_module(module_name, verbose=False):
+def get_dir(file_path):
+    package=file_path.split("/")[-2]
+    return os.path.dirname(os.path.realpath(file_path)),package
+def import_module(file_name,module_name, verbose=False):
     try:
         # because we want to import using a variable, do it this way
-        module_obj = __import__(module_name)
+        dir,package=get_dir(file_name)
+        sys.path.append(dir+"/")
+        
+        module_obj = importlib.import_module(module_name,package=package)
         # create a global object containging our module
         globals()[module_name] = module_obj
     except ImportError as e:
@@ -133,12 +140,12 @@ def get_imports_from_dir(the_dir):
     if not os.path.isdir(the_dir):
                 sys.stderr.write("ERROR: superimport : input directory does not exist\n")
     else:
-        python_files = glob(os.path.join(the_dir, "*.py"))
+        python_files = glob(os.path.join(the_dir,"**/", "*.py"),recursive=True)
 
     for f in python_files:
         with open(f) as fp:
             file_string = fp.read()
-            imports = get_imports(file_string)
+            imports = get_imports(file_string,f)
             for i in imports:
                 yield i    
 
@@ -156,51 +163,48 @@ maping = {**mapping, **mapping2}  # adding two dictionaries
 
 gnippam = {v: k for k, v in mapping.items()}  # reversing the mapping
 
-if __name__ != "__main__":
+if __name__ == "__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument('-superimport_input_dir', help='input directory')
     parser.add_argument('-superimport_input_file', help='optional input file')
     args=parser.parse_args()
 
-    if not args.superimport_input_dir or not args.superimport_input_file:
+    if not args.superimport_input_dir and not args.superimport_input_file:
             sys.stderr.write("ERROR: superimport : missing input directory or file\n")
     else:
         if args.superimport_input_dir:
             imports = get_imports_from_dir(args.superimport_input_dir)
             # from https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-a-list-of-lists
-            imports = {item for sublist in imports for item in sublist}
+            #imports = {item for sublist in imports for item in sublist}
+            imports = set(imports)
         elif args.superimport_input_file:
             imports = get_imports(args.superimport_input_file)
 
 
 
+    print(imports)
 
-    for frame in inspect.stack()[1:]:
-        if frame.filename[0] != "<":
-            fc = open(frame.filename).read()
-            fc = fc.replace("import superimport\n", "")
-            matches = get_imports(fc)
-            for package in matches:
+    for package,file_name in imports:
+        try:
+            import_module(file_name,package, True)
+        except Exception as e:
+            if package in mapping:
+
                 try:
-                    import_module(package, True)
-                except Exception as e:
-                    if package in mapping:
-
-                        try:
-                            install_if_missing({mapping[package]}, True)
-                        except:
-                            print("Could not install automatically from map, trying reverse map")
-                            install_if_missing({gnippam[package]}, True)
-                    else:
-                        logging.warning("Package was not found in the reverse index, trying pypi.")
-                        status, name, meta = check_if_package_on_pypi(package)
-                        if status:
-                            logging.info(
-                                f"Package{name} was found on PyPi\nNow installing {name}"
-                            )
-                            install_if_missing({package}, True)
-                        else:
-                            logging.warning(
-                                f"Failed to install {package} automatically"
-                            )
-            break
+                    install_if_missing({mapping[package]}, True)
+                except:
+                    print("Could not install automatically from map, trying reverse map")
+                    install_if_missing({gnippam[package]}, True)
+            else:
+                logging.warning("Package was not found in the reverse index, trying pypi.")
+                status, name, meta = check_if_package_on_pypi(package)
+                if status:
+                    logging.info(
+                        f"Package{name} was found on PyPi\nNow installing {name}"
+                    )
+                    install_if_missing({package}, True)
+                else:
+                    logging.warning(
+                        f"Failed to install {package} automatically"
+                    )
+                #break
