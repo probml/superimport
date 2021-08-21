@@ -124,8 +124,8 @@ def get_dir(file_path):
 def import_module(file_name,module_name, verbose=False):
     try:
         # because we want to import using a variable, do it this way
-        dir,package=get_dir(file_name)
-        sys.path.append(dir+"/")
+        _dir,package=get_dir(file_name)
+        sys.path.append(_dir+"/")
         
         module_obj = importlib.import_module(module_name,package=package)
         # create a global object containging our module
