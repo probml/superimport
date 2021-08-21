@@ -1,6 +1,6 @@
 from distutils.core import setup
 from setuptools import setup, find_packages
-superimport._version import __version__
+from superimport._version import __version__
 
 setup(
     name="superimport",
