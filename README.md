@@ -1,5 +1,5 @@
 # superimport
-Simple package to lookup for missing packages.
+Simple package to lookup missing packages and autoinstall them.
 ## Installing using PyPi:
 `pip install superimport`
 ## Usage:
