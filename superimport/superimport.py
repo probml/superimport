@@ -162,7 +162,7 @@ def get_imports_depending_on_context():
         frames=inspect.stack()[1:]
         for frame in frames:
             file_name=frame.filename.split("/")[-1]
-            if frame.filename[0] != "<" and file_name!="superimport.py" and file_name!="__init__.py":
+            if frame.filename[0] != "<" and file_name!="superimport.py" and file_name!="__init__.py" and file_name!="setup.py":
                 fc = open(frame.filename).read()
                 fc = fc.replace("import superimport\n", "")
                 imports = get_imports(fc,frame.filename)
