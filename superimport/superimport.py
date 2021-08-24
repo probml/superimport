@@ -248,6 +248,10 @@ def unimport(module_object=None,module=None,verbose=False):
             del sys.modules[module]
             for s in sub:
                 del sys.modules[s]
+            try:
+                del globals()[module]
+            except:
+                pass
         if verbose:
             print("unloaded module: "+module)
             s=[gl for gl in sys.modules if gl.startswith(module+".")]
