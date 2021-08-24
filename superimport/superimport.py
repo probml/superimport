@@ -241,9 +241,9 @@ def unimport(module_object=None,module=None,verbose=False):
     if module==None:
         module=module_object.__name__
     if verbose:
-        print("Unloading module: "+module)
+        print("Unimporting module: "+module)
         s=[gl for gl in sys.modules if gl.startswith(module+".")]
-        print(s)
+        print("Found the following modules:",s)
     try:
         
         if module in sys.modules:
@@ -256,9 +256,9 @@ def unimport(module_object=None,module=None,verbose=False):
             except:
                 pass
         if verbose:
-            print("unloaded module: "+module)
+            print("Unimported module: "+module)
             s=[gl for gl in sys.modules if gl.startswith(module+".")]
-            print(s)
+            print("Now trying searching for the same module again: ",s)
     except:
         pass
 
