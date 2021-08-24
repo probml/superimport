@@ -244,7 +244,7 @@ def unimport(module_object=None,module=None,verbose=False):
         print("Unimporting module: "+module)
         s=[gl for gl in sys.modules if gl.startswith(module+".")]
         print("Found the following modules in cache:",s)
-        g=s=[gl for gl in globals()[module] if gl.startswith(module+".")]
+        g=[gl for gl in globals() if gl.startswith(module+".")]
         print("Found the following modules global:",g)
     try:
         
@@ -265,7 +265,7 @@ def unimport(module_object=None,module=None,verbose=False):
             print("Unimported module: "+module)
             s=[gl for gl in sys.modules if gl.startswith(module+".")]
             print("Now trying searching for the same module again in cache: ",s)
-            g=s=[gl for gl in globals()[module] if gl.startswith(module+".")]
+            g=[gl for gl in globals() if gl.startswith(module+".")]
             print("and in global:",g)
     except:
         pass
