@@ -273,4 +273,4 @@ def unimport(module_object=None,module=None,verbose=False):
     except:
         pass
     # Making sure that everything is released. :(
-    time.sleep(2.4)
+    time.sleep(4.2)
