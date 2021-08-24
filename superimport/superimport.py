@@ -159,9 +159,12 @@ def get_imports_depending_on_context():
         frames=inspect.stack()[1:]
         for frame in frames:
             file_name=frame.filename.split("/")[-1]
-            if frame.filename[0] != "<" and file_name!="superimport.py" and file_name!="__init__.py" and file_name!="setup.py" and file_name!="unload.py":
+            files_to_skip={'superimport.py','__init__.py','setup.py','interactiveshell.py', 'ipykernel_launcher.py', 'zmqstream.py', 'base_events.py', 'kernelbase.py', 'events.py', 'runpy.py', 'ipkernel.py', 'zmqshell.py', 'application.py', 'asyncio.py', 'stack_context.py', 'kernelapp.py'}
+            if frame.filename[0] != "<" and file_name not in files_to_skip:
                 fc = open(frame.filename).read()
-                fc = fc.replace("import superimport\n", "").replace("from superimport.superimport import unload", "")
+                remove_list=["import superimport\n","from superimport.superimport import unload"]
+                for r in remove_list:
+                    fc = fc.replace(r,"")
                 imports = get_imports(fc,frame.filename)
                 break
     elif __name__ == "__main__":

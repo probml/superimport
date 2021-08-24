@@ -12,7 +12,7 @@ setup(
     author="Mahmoud Soliman",
     author_email="mjs@aucegypt.edu",
     url="https://github.com/probml/superimport",
-    download_url="https://github.com/probml/superimport/archive/refs/tags/0.0.3.dev1.20210821214809.tar.gz",
+    download_url="https://github.com/probml/superimport/archive/refs/tags/0.3.1.tar.gz",
     keywords=["setup", "runtime", "automation"],
     install_requires=[
         "requests"
