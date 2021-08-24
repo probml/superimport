@@ -22,6 +22,9 @@ import argparse
 from glob import glob
 import importlib
 
+import time
+
+
 pipreqs_mapping_url="https://raw.githubusercontent.com/bndr/pipreqs/master/pipreqs/mapping"
 superimport_mappin_url="https://raw.githubusercontent.com/probml/superimport/main/superimport/mapping2"
 
@@ -269,4 +272,5 @@ def unimport(module_object=None,module=None,verbose=False):
             print("and in global:",g)
     except:
         pass
-
+    # Making sure that everything is released. :(
+    time.sleep(2.4)
