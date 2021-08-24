@@ -1,1 +1,2 @@
-from superimport import superimport
+from superimport import *
+from superimport.superimport import *

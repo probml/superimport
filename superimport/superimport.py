@@ -159,9 +159,9 @@ def get_imports_depending_on_context():
         frames=inspect.stack()[1:]
         for frame in frames:
             file_name=frame.filename.split("/")[-1]
-            if frame.filename[0] != "<" and file_name!="superimport.py" and file_name!="__init__.py" and file_name!="setup.py":
+            if frame.filename[0] != "<" and file_name!="superimport.py" and file_name!="__init__.py" and file_name!="setup.py" and file_name!="unload.py":
                 fc = open(frame.filename).read()
-                fc = fc.replace("import superimport\n", "")
+                fc = fc.replace("import superimport\n", "").replace("from superimport.superimport import unload", "")
                 imports = get_imports(fc,frame.filename)
                 break
     elif __name__ == "__main__":
@@ -185,7 +185,7 @@ def get_imports_depending_on_context():
 
 
 ### Globals
-
+logging.info("superimport loaded!")
 
 pipreqs_mapping_string = load_file_from_url(pipreqs_mapping_url)
 superimport_mapping_string = load_file_from_url(superimport_mappin_url)
@@ -231,4 +231,27 @@ for package,file_name in imports:
                 logging.warning(
                     f"Failed to install {package} automatically"
                 )
-    
+
+
+# https://stackoverflow.com/questions/32234156/how-to-unimport-a-python-module-which-is-already-imported
+def unimport(module_object=None,module=None,verbose=False):
+    if module==None:
+        module=module_object.__name__
+    if verbose:
+        print("Unloading module: "+module)
+        s=[gl for gl in sys.modules if gl.startswith(module+".")]
+        print(s)
+    try:
+        
+        if module in sys.modules:
+            sub = [s for s in sys.modules if s.startswith(module+".")]  
+            del sys.modules[module]
+            for s in sub:
+                del sys.modules[s]
+        if verbose:
+            print("unloaded module: "+module)
+            s=[gl for gl in sys.modules if gl.startswith(module+".")]
+            print(s)
+    except:
+        pass
+
