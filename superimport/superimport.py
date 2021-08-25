@@ -22,8 +22,6 @@ import argparse
 from glob import glob
 import importlib
 
-import time
-
 
 pipreqs_mapping_url="https://raw.githubusercontent.com/bndr/pipreqs/master/pipreqs/mapping"
 superimport_mappin_url="https://raw.githubusercontent.com/probml/superimport/main/superimport/mapping2"
@@ -106,7 +104,8 @@ def get_imports(
                         name = the_string[5:i]
                         name = preprocess_imports(name)
                     else:
-                        name = the_string.replace("import ", "")
+                        
+                        name = the_string[7:]
                         name = preprocess_imports(name)
                     matches.append((name,file))
     return set(matches)
@@ -159,13 +158,18 @@ def get_imports_from_dir(the_dir):
 def get_imports_depending_on_context():
     imports=[]
     if __name__ != "__main__":
-        frames=inspect.stack()[1:]
+        try:
+            frames=inspect.stack()[1:]
+        except Exception as e:
+            if str(e)==r"AttributeError: module has no attribute '__name__'":
+                print("Error Loading superimport, it was most probably deimported. Please re-run your file and it should work!")
+                return None
         for frame in frames:
             file_name=frame.filename.split("/")[-1]
             files_to_skip={'superimport.py','__init__.py','setup.py','interactiveshell.py', 'ipykernel_launcher.py', 'zmqstream.py', 'base_events.py', 'kernelbase.py', 'events.py', 'runpy.py', 'ipkernel.py', 'zmqshell.py', 'application.py', 'asyncio.py', 'stack_context.py', 'kernelapp.py'}
             if frame.filename[0] != "<" and file_name not in files_to_skip:
                 fc = open(frame.filename).read()
-                remove_list=["import superimport\n","from superimport.superimport import unload"]
+                remove_list=["import superimport\n","from superimport.superimport import unload","from superimport import superimport"]
                 for r in remove_list:
                     fc = fc.replace(r,"")
                 imports = get_imports(fc,frame.filename)
@@ -239,38 +243,4 @@ for package,file_name in imports:
                 )
 
 
-# https://stackoverflow.com/questions/32234156/how-to-unimport-a-python-module-which-is-already-imported
-def unimport(module_object=None,module=None,verbose=False):
-    if module==None:
-        module=module_object.__name__
-    if verbose:
-        print("Unimporting module: "+module)
-        s=[gl for gl in sys.modules if gl.startswith(module+".")]
-        print("Found the following modules in cache:",s)
-        g=[gl for gl in globals() if gl.startswith(module+".")]
-        print("Found the following modules global:",g)
-    try:
-        
-        if module in sys.modules:
-            sub = [s for s in sys.modules if s.startswith(module+".")]  
-            del sys.modules[module]
-            for s in sub:
-                del sys.modules[s]
-                try:
-                    del globals()[s]
-                except:
-                    pass
-            try:
-                del globals()[module]
-            except:
-                pass
-        if verbose:
-            print("Unimported module: "+module)
-            s=[gl for gl in sys.modules if gl.startswith(module+".")]
-            print("Now trying searching for the same module again in cache: ",s)
-            g=[gl for gl in globals() if gl.startswith(module+".")]
-            print("and in global:",g)
-    except:
-        pass
-    # Making sure that everything is released. :(
-    time.sleep(4.2)
+    
