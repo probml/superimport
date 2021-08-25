@@ -161,9 +161,8 @@ def get_imports_depending_on_context():
         try:
             frames=inspect.stack()[1:]
         except Exception as e:
-            if str(e)==r"AttributeError: module has no attribute '__name__'":
-                print("Error Loading superimport, it was most probably deimported. Please re-run your file and it should work!")
-                return None
+            sys.stderr.write("Error importing superimport, it was most probably deimported. Please re-run your file and it should work!")
+            sys.exit()
         for frame in frames:
             file_name=frame.filename.split("/")[-1]
             files_to_skip={'superimport.py','__init__.py','setup.py','interactiveshell.py', 'ipykernel_launcher.py', 'zmqstream.py', 'base_events.py', 'kernelbase.py', 'events.py', 'runpy.py', 'ipkernel.py', 'zmqshell.py', 'application.py', 'asyncio.py', 'stack_context.py', 'kernelapp.py'}
@@ -206,26 +205,26 @@ mapping2= get_packages_from_string(superimport_mapping_string, ":")
 dir_name = os.path.dirname(__file__)
 maping = {**mapping, **mapping2}  # adding two dictionaries
 
-gnippam = {v: k for k, v in mapping.items()}  # reversing the mapping
+gnippam = {v: k for k, v in maping.items()}  # reversing the mapping
 ###
 
 
 
     
     
-    
+
     
 imports = get_imports_depending_on_context()
 # Check if each package is already installed.
-
+# If not, install it.
 for package,file_name in imports:
     try:
         import_module(file_name,package, True)
     except Exception as e:
-        if package in mapping:
+        if package in maping or package in gnippam:
 
             try:
-                install_if_missing({mapping[package]}, True)
+                install_if_missing({maping[package]}, True)
             except Exception as e2:
                 logging.warning("Could not install automatically from map, trying reverse map")
                 install_if_missing({gnippam[package]}, True)
