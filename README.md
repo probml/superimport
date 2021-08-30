@@ -8,7 +8,10 @@ There are two ways to use superimport:
 - superimport can be called as a program, see `-h` for args. This allows you to do "superimports" across mulitple files and folders.
 - by adding `import superimport` to the top of your python script. This is the per script mode.
 ## Examples:
-See this notebook <a href=" https://colab.research.google.com/github/probml/probml-notebooks/blob/main/notebooks/Superimport.ipynb">
+See this notebook 
+
+
+<a href=" https://colab.research.google.com/github/probml/probml-notebooks/blob/main/notebooks/Superimport.ipynb" target="_parent">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 ## 🔪 Sharp edges 🔪:
