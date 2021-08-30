@@ -11,9 +11,12 @@ There are two ways to use superimport:
 See this notebook 
 
 
-<a href=" https://colab.research.google.com/github/probml/probml-notebooks/blob/main/notebooks/Superimport.ipynb" target="_parent">
+
+<a href="https://colab.research.google.com/github/probml/probml-notebooks/blob/main/notebooks/Superimport.ipynb" target="_parent">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
+
+
 ## 🔪 Sharp edges 🔪:
 - If the missing python package contains a requirement that is not listed in its own requirements.txt and is being used your file will fail anyway.
 - If you import superimport twice in the same process (a common usecase is ipython kernels), the second time will not work because of the way python [loads modules](https://docs.python.org/3/reference/import.html) , you would need a something like [deimport](https://github.com/probml/deimport) to deimport the package before being able to import superimport to the desired effect again.
