@@ -161,7 +161,7 @@ def get_imports_depending_on_context():
         try:
             frames=inspect.stack()[1:]
         except Exception as e:
-            sys.stderr.write("Error importing superimport, it was most probably deimported. Please re-run your file and it should work!")
+            sys.stderr.write("Error importing. Please re-run the cell.")
             sys.exit()
         for frame in frames:
             file_name=frame.filename.split("/")[-1]
