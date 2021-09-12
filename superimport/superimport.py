@@ -21,8 +21,8 @@ import os
 import argparse
 from glob import glob
 import importlib
-
-
+# import traceback
+logging.basicConfig(level=logging.INFO)
 pipreqs_mapping_url="https://raw.githubusercontent.com/bndr/pipreqs/master/pipreqs/mapping"
 superimport_mappin_url="https://raw.githubusercontent.com/probml/superimport/main/superimport/mapping2"
 
@@ -161,7 +161,11 @@ def get_imports_depending_on_context():
         try:
             frames=inspect.stack()[1:]
         except Exception as e:
-            sys.stderr.write("Error importing. Please re-run the cell.")
+            sys.stderr.write("Error importing. Please re-run the cell. If you are running in iPython or colab try `%run -n` ")
+            
+            # print(e)
+            # print("#"*30)
+            # print(traceback.print_exc())
             sys.exit()
         for frame in frames:
             file_name=frame.filename.split("/")[-1]
@@ -194,7 +198,7 @@ def get_imports_depending_on_context():
 
 
 ### Globals
-logging.info("superimport loaded!")
+#logging.info("superimport loaded!")
 
 pipreqs_mapping_string = load_file_from_url(pipreqs_mapping_url)
 superimport_mapping_string = load_file_from_url(superimport_mappin_url)
@@ -213,8 +217,10 @@ gnippam = {v: k for k, v in maping.items()}  # reversing the mapping
     
     
 
-    
+#logging.info("superimport done init!")
+
 imports = get_imports_depending_on_context()
+#logging.info("superimport got imports depending on context!")
 # Check if each package is already installed.
 # If not, install it.
 for package,file_name in imports:
@@ -226,10 +232,10 @@ for package,file_name in imports:
             try:
                 install_if_missing({maping[package]}, True)
             except Exception as e2:
-                logging.warning("Could not install automatically from map, trying reverse map")
+                #logging.warning("Could not install automatically from map, trying reverse map")
                 install_if_missing({gnippam[package]}, True)
         else:
-            logging.warning("Package was not found in the reverse index, trying pypi.")
+            #logging.warning("Package was not found in the reverse index, trying pypi.")
             status, name, meta = check_if_package_on_pypi(package)
             if status:
                 logging.info(
