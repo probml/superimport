@@ -1,4 +1,5 @@
 # https://medium.com/@joel.barmettler/how-to-upload-your-python-package-to-pypi-65edc5fe9c56
+# rm -rf ~/github/superimport/dist/*; python3 setup.py sdist;twine upload dist/*
 from setuptools import setup
 from superimport._version import __version__
 
